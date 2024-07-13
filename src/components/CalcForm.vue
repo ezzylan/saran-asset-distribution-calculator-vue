@@ -44,8 +44,7 @@ const { handleSubmit } = useForm({
 });
 
 const onSubmit = handleSubmit((values) => {
-  let telegramBotUrl =
-    "https://api.telegram.org/bot6435778385:AAEl4aVsCYfIhcFZqXLxxMak8Hn2SQe5Q_o/sendMessage";
+  let telegramBotUrl = `https://api.telegram.org/bot${import.meta.env.VITE_TELEGRAM_BOT_TOKEN}/sendMessage`;
 
   let bodyContent = new FormData();
   bodyContent.append("chat_id", "@assetcalctest");
