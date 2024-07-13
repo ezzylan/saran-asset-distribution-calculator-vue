@@ -1,47 +1,75 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+import { ref } from "vue";
+import ResultsChart from "@/components/ResultsChart.vue";
+import CalcForm from "@/components/CalcForm.vue";
+
+export type Results = {
+  name: string;
+  email: string;
+  parentsPresent?: boolean | undefined;
+  spousePresent?: boolean | undefined;
+  childrenPresent?: boolean | undefined;
+  mobileNumber?: any;
+};
+
+const showDialog = ref(false);
+const percentages = ref([
+  { name: "Parents", percentage: 0 },
+  { name: "Spouse", percentage: 0 },
+  { name: "Children", percentage: 0 },
+]);
+
+function calculatePercentage(results: Results) {
+  let parentsPerc = 0;
+  let spousePerc = 0;
+  let childrenPerc = 0;
+
+  if (results.parentsPresent) {
+    parentsPerc = !results.spousePresent && !results.childrenPresent ? 100 : 50;
+
+    if (results.spousePresent) {
+      spousePerc = results.childrenPresent ? 25 : 50;
+      childrenPerc = results.childrenPresent ? 25 : 0;
+    } else {
+      spousePerc = 0;
+      childrenPerc = results.childrenPresent ? 50 : 0;
+    }
+  } else {
+    parentsPerc = 0;
+
+    if (results.spousePresent) {
+      spousePerc = results.childrenPresent ? 50 : 100;
+      childrenPerc = results.childrenPresent ? 50 : 0;
+    } else {
+      spousePerc = 0;
+      childrenPerc = results.childrenPresent ? 100 : 0;
+    }
+  }
+
+  percentages.value[0].percentage = parentsPerc;
+  percentages.value[1].percentage = spousePerc;
+  percentages.value[2].percentage = childrenPerc;
+}
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
+  <main class="container mx-auto p-8">
+    <h1>Asset Distribution Calculator</h1>
+    <p>Please fill in the following details.</p>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
+    <CalcForm
+      @show-results="
+        (results) => {
+          showDialog = true;
+          calculatePercentage(results);
+        }
+      "
+    />
 
-  <main>
-    <TheWelcome />
+    <ResultsChart
+      :showDialog
+      :percentages
+      @close-results="showDialog = false"
+    />
   </main>
 </template>
-
-<style scoped>
-header {
-  line-height: 1.5;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
-</style>
