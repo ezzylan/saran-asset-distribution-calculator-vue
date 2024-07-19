@@ -30,42 +30,45 @@ const emit = defineEmits<{
   ): void;
 }>();
 
-function calculatePercentage(results: {
-  name: string;
-  email: string;
-  parentsPresent?: boolean | undefined;
-  spousePresent?: boolean | undefined;
-  childrenPresent?: boolean | undefined;
-  mobileNumber?: any;
-}) {
+function calculatePercentage(results: { items: string[] }) {
   let parentsPerc = 0;
   let spousePerc = 0;
   let childrenPerc = 0;
 
-  if (results.parentsPresent) {
-    parentsPerc = !results.spousePresent && !results.childrenPresent ? 100 : 50;
+  if (results.items.includes("parentsPresent")) {
+    parentsPerc =
+      !results.items.includes("spousePresent") &&
+      !results.items.includes("childrenPresent")
+        ? 100
+        : 50;
 
-    if (results.spousePresent) {
-      spousePerc = results.childrenPresent ? 25 : 50;
-      childrenPerc = results.childrenPresent ? 25 : 0;
+    if (results.items.includes("spousePresent")) {
+      spousePerc = results.items.includes("childrenPresent") ? 25 : 50;
+      childrenPerc = results.items.includes("childrenPresent") ? 25 : 0;
     } else {
       spousePerc = 0;
-      childrenPerc = results.childrenPresent ? 50 : 0;
+      childrenPerc = results.items.includes("childrenPresent") ? 50 : 0;
     }
   } else {
     parentsPerc = 0;
 
-    if (results.spousePresent) {
-      spousePerc = results.childrenPresent ? 50 : 100;
-      childrenPerc = results.childrenPresent ? 50 : 0;
+    if (results.items.includes("spousePresent")) {
+      spousePerc = results.items.includes("childrenPresent") ? 50 : 100;
+      childrenPerc = results.items.includes("childrenPresent") ? 50 : 0;
     } else {
       spousePerc = 0;
-      childrenPerc = results.childrenPresent ? 100 : 0;
+      childrenPerc = results.items.includes("childrenPresent") ? 100 : 0;
     }
   }
 
   return { parentsPerc, spousePerc, childrenPerc };
 }
+
+const items = [
+  { id: "parentsPresent", label: "Parents Present" },
+  { id: "spousePresent", label: "Spouse Present" },
+  { id: "childrenPresent", label: "Children Present" },
+] as const;
 
 const formSchema = toTypedSchema(
   z.object({
@@ -73,9 +76,9 @@ const formSchema = toTypedSchema(
       message: "Name must be at least 3 characters.",
     }),
     email: z.string().email({ message: "Invalid email address" }),
-    parentsPresent: z.boolean().default(false).optional(),
-    spousePresent: z.boolean().default(false).optional(),
-    childrenPresent: z.boolean().default(false).optional(),
+    items: z.array(z.string()).refine((value) => value.some((item) => item), {
+      message: "You have to select at least one item.",
+    }),
     mobileNumber: z.string().min(9).max(10).refine(isMobilePhone),
   }),
 );
@@ -83,9 +86,7 @@ const formSchema = toTypedSchema(
 const { handleSubmit } = useForm({
   validationSchema: formSchema,
   initialValues: {
-    parentsPresent: false,
-    spousePresent: false,
-    childrenPresent: false,
+    items: ["parentsPresent"],
   },
 });
 
@@ -140,44 +141,37 @@ const onSubmit = handleSubmit((values) => {
       </FormItem>
     </FormField>
 
-    <div class="flex flex-col gap-2 md:flex-row md:gap-16">
-      <FormField
-        v-slot="{ value, handleChange }"
-        type="checkbox"
-        name="parentsPresent"
-      >
-        <FormItem class="flex flex-row items-center space-x-3 space-y-0">
-          <FormControl>
-            <Checkbox :checked="value" @update:checked="handleChange" />
-          </FormControl>
-          <FormLabel>Parents Present</FormLabel>
-          <Users />
-          <FormMessage />
-        </FormItem>
-      </FormField>
-
-      <FormField v-slot="{ value, handleChange }" name="spousePresent">
-        <FormItem class="flex flex-row items-center space-x-3 space-y-0">
-          <FormControl>
-            <Checkbox :checked="value" @update:checked="handleChange" />
-          </FormControl>
-          <FormLabel>Spouse Present</FormLabel>
-          <HandHeart />
-          <FormMessage />
-        </FormItem>
-      </FormField>
-
-      <FormField v-slot="{ value, handleChange }" name="childrenPresent">
-        <FormItem class="flex flex-row items-center space-x-3 space-y-0">
-          <FormControl>
-            <Checkbox :checked="value" @update:checked="handleChange" />
-          </FormControl>
-          <FormLabel>Children Present</FormLabel>
-          <Baby />
-          <FormMessage />
-        </FormItem>
-      </FormField>
-    </div>
+    <FormField name="items">
+      <FormItem>
+        <div class="flex flex-col gap-2 md:flex-row md:gap-16">
+          <FormField
+            v-for="item in items"
+            v-slot="{ value, handleChange }"
+            :key="item.id"
+            type="checkbox"
+            :value="item.id"
+            :unchecked-value="false"
+            name="items"
+          >
+            <FormItem class="flex flex-row items-start space-x-3 space-y-0">
+              <FormControl>
+                <Checkbox
+                  :checked="value.includes(item.id)"
+                  @update:checked="handleChange"
+                />
+              </FormControl>
+              <FormLabel class="font-normal">
+                {{ item.label }}
+              </FormLabel>
+              <Users v-if="item.id === 'parentsPresent'" class="h-4 w-4" />
+              <HandHeart v-if="item.id === 'spousePresent'" class="h-4 w-4" />
+              <Baby v-if="item.id === 'childrenPresent'" class="h-4 w-4" />
+            </FormItem>
+          </FormField>
+        </div>
+        <FormMessage />
+      </FormItem>
+    </FormField>
 
     <FormField v-slot="{ componentField }" name="mobileNumber">
       <FormItem>
