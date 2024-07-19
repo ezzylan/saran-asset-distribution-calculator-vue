@@ -1,16 +1,8 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import ResultsChart from "@/components/ResultsChart.vue";
 import CalcForm from "@/components/CalcForm.vue";
-
-export type Results = {
-  name: string;
-  email: string;
-  parentsPresent?: boolean | undefined;
-  spousePresent?: boolean | undefined;
-  childrenPresent?: boolean | undefined;
-  mobileNumber?: any;
-};
+import ResultsChart from "@/components/ResultsChart.vue";
+import { Toaster } from "@/components/ui/sonner";
+import { ref } from "vue";
 
 const showDialog = ref(false);
 const percentages = ref([
@@ -18,50 +10,24 @@ const percentages = ref([
   { name: "Spouse", percentage: 0 },
   { name: "Children", percentage: 0 },
 ]);
-
-function calculatePercentage(results: Results) {
-  let parentsPerc = 0;
-  let spousePerc = 0;
-  let childrenPerc = 0;
-
-  if (results.parentsPresent) {
-    parentsPerc = !results.spousePresent && !results.childrenPresent ? 100 : 50;
-
-    if (results.spousePresent) {
-      spousePerc = results.childrenPresent ? 25 : 50;
-      childrenPerc = results.childrenPresent ? 25 : 0;
-    } else {
-      spousePerc = 0;
-      childrenPerc = results.childrenPresent ? 50 : 0;
-    }
-  } else {
-    parentsPerc = 0;
-
-    if (results.spousePresent) {
-      spousePerc = results.childrenPresent ? 50 : 100;
-      childrenPerc = results.childrenPresent ? 50 : 0;
-    } else {
-      spousePerc = 0;
-      childrenPerc = results.childrenPresent ? 100 : 0;
-    }
-  }
-
-  percentages.value[0].percentage = parentsPerc;
-  percentages.value[1].percentage = spousePerc;
-  percentages.value[2].percentage = childrenPerc;
-}
 </script>
 
 <template>
   <main class="container mx-auto p-8">
-    <h1>Asset Distribution Calculator</h1>
+    <h2
+      class="scroll-m-20 pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0"
+    >
+      Asset Distribution Calculator
+    </h2>
     <p>Please fill in the following details.</p>
 
     <CalcForm
       @show-results="
         (results) => {
           showDialog = true;
-          calculatePercentage(results);
+          percentages[0].percentage = results.parentsPerc;
+          percentages[1].percentage = results.spousePerc;
+          percentages[2].percentage = results.childrenPerc;
         }
       "
     />
@@ -72,4 +38,6 @@ function calculatePercentage(results: Results) {
       @close-results="showDialog = false"
     />
   </main>
+
+  <Toaster richColors />
 </template>

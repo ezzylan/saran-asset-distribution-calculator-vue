@@ -1,13 +1,12 @@
 <script setup lang="ts">
-import { useForm } from "vee-validate";
-import { toTypedSchema } from "@vee-validate/zod";
-import * as z from "zod";
-import isMobilePhone from "validator/lib/isMobilePhone";
 import { Baby, HandHeart, Users } from "lucide-vue-next";
+import isMobilePhone from "validator/lib/isMobilePhone";
+import { useForm } from "vee-validate";
+import { toast } from "vue-sonner";
+import * as z from "zod";
 
-import { useFetch } from "@vueuse/core";
-import type { Results } from "@/App.vue";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   FormControl,
   FormDescription,
@@ -17,9 +16,56 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { toTypedSchema } from "@vee-validate/zod";
+import { useFetch } from "@vueuse/core";
 
-const emit = defineEmits<{ (e: "showResults", value: Results): void }>();
+const emit = defineEmits<{
+  (
+    e: "showResults",
+    value: {
+      parentsPerc: number;
+      spousePerc: number;
+      childrenPerc: number;
+    },
+  ): void;
+}>();
+
+function calculatePercentage(results: {
+  name: string;
+  email: string;
+  parentsPresent?: boolean | undefined;
+  spousePresent?: boolean | undefined;
+  childrenPresent?: boolean | undefined;
+  mobileNumber?: any;
+}) {
+  let parentsPerc = 0;
+  let spousePerc = 0;
+  let childrenPerc = 0;
+
+  if (results.parentsPresent) {
+    parentsPerc = !results.spousePresent && !results.childrenPresent ? 100 : 50;
+
+    if (results.spousePresent) {
+      spousePerc = results.childrenPresent ? 25 : 50;
+      childrenPerc = results.childrenPresent ? 25 : 0;
+    } else {
+      spousePerc = 0;
+      childrenPerc = results.childrenPresent ? 50 : 0;
+    }
+  } else {
+    parentsPerc = 0;
+
+    if (results.spousePresent) {
+      spousePerc = results.childrenPresent ? 50 : 100;
+      childrenPerc = results.childrenPresent ? 50 : 0;
+    } else {
+      spousePerc = 0;
+      childrenPerc = results.childrenPresent ? 100 : 0;
+    }
+  }
+
+  return { parentsPerc, spousePerc, childrenPerc };
+}
 
 const formSchema = toTypedSchema(
   z.object({
@@ -44,6 +90,8 @@ const { handleSubmit } = useForm({
 });
 
 const onSubmit = handleSubmit((values) => {
+  const { parentsPerc, spousePerc, childrenPerc } = calculatePercentage(values);
+
   let telegramBotUrl = `https://api.telegram.org/bot${import.meta.env.VITE_TELEGRAM_BOT_TOKEN}/sendMessage`;
 
   let bodyContent = new FormData();
@@ -55,14 +103,17 @@ const onSubmit = handleSubmit((values) => {
     Name: ${values.name}
     Email: ${values.email}
     Mobile Number: +60${values.mobileNumber}
+    Parents: ${parentsPerc}%
+    Spouse: ${spousePerc}%
+    Children: ${childrenPerc}%
     `,
   );
 
   const { error } = useFetch(telegramBotUrl).post(bodyContent);
   if (error.value) {
-    console.error(error.value);
+    toast.error(error.value);
   } else {
-    emit("showResults", values);
+    emit("showResults", { parentsPerc, spousePerc, childrenPerc });
   }
 });
 </script>
@@ -89,7 +140,7 @@ const onSubmit = handleSubmit((values) => {
       </FormItem>
     </FormField>
 
-    <div class="flex gap-16">
+    <div class="flex flex-col gap-2 md:flex-row md:gap-16">
       <FormField
         v-slot="{ value, handleChange }"
         type="checkbox"
