@@ -18,7 +18,6 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "@/components/ui/drawer";
 import { useMediaQuery } from "@vueuse/core";
 import { Baby, HandHeart, Users } from "lucide-vue-next";
@@ -38,7 +37,14 @@ const isDesktop = useMediaQuery("(min-width: 768px)");
         <DialogTitle>Here is your result!</DialogTitle>
         <DialogDescription class="flex justify-between">
           <span v-for="{ name, percentage } in percentages">
-            <div class="flex items-center gap-2">
+            <div
+              class="flex items-center gap-2"
+              :class="{
+                'text-[#FFC1CB]': name === 'Parents' && percentage > 0,
+                'text-[#FFA500]': name === 'Spouse' && percentage > 0,
+                'text-[#FF0]': name === 'Children' && percentage > 0,
+              }"
+            >
               <Users v-if="name === 'Parents'" class="h-4 w-4" />
               <HandHeart v-if="name === 'Spouse'" class="h-4 w-4" />
               <Baby v-if="name === 'Children'" class="h-4 w-4" />
@@ -52,6 +58,7 @@ const isDesktop = useMediaQuery("(min-width: 768px)");
         index="name"
         :category="'percentage'"
         :data="percentages"
+        :colors="['pink', 'orange', 'yellow']"
         :type="'pie'"
       />
 
@@ -75,7 +82,14 @@ const isDesktop = useMediaQuery("(min-width: 768px)");
         <DrawerTitle>Here is your result!</DrawerTitle>
         <DrawerDescription class="flex justify-between">
           <span v-for="{ name, percentage } in percentages">
-            <div class="flex items-center gap-2">
+            <div
+              class="flex items-center gap-2"
+              :class="{
+                'text-[#FFC1CB]': name === 'Parents' && percentage > 0,
+                'text-[#FFA500]': name === 'Spouse' && percentage > 0,
+                'text-[#FF0]': name === 'Children' && percentage > 0,
+              }"
+            >
               <Users v-if="name === 'Parents'" class="h-4 w-4" />
               <HandHeart v-if="name === 'Spouse'" class="h-4 w-4" />
               <Baby v-if="name === 'Children'" class="h-4 w-4" />
@@ -89,6 +103,7 @@ const isDesktop = useMediaQuery("(min-width: 768px)");
         index="name"
         :category="'percentage'"
         :data="percentages"
+        :colors="['pink', 'orange', 'yellow']"
         :type="'pie'"
       />
 

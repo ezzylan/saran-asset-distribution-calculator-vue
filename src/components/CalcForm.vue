@@ -79,6 +79,7 @@ const formSchema = toTypedSchema(
     items: z.array(z.string()).refine((value) => value.some((item) => item), {
       message: "You have to select at least one item.",
     }),
+    childrenNumber: z.coerce.number().int().gte(1).lte(10).optional(),
     mobileNumber: z.string().min(9).max(10).refine(isMobilePhone),
   }),
 );
@@ -93,13 +94,7 @@ const { handleSubmit } = useForm({
 const onSubmit = handleSubmit((values) => {
   const { parentsPerc, spousePerc, childrenPerc } = calculatePercentage(values);
 
-  let telegramBotUrl = `https://api.telegram.org/bot${import.meta.env.VITE_TELEGRAM_BOT_TOKEN}/sendMessage`;
-
-  let bodyContent = new FormData();
-  bodyContent.append("chat_id", "@assetcalctest");
-  bodyContent.append(
-    "text",
-    `
+  let bodyText = `
     New client!
     Name: ${values.name}
     Email: ${values.email}
@@ -107,8 +102,17 @@ const onSubmit = handleSubmit((values) => {
     Parents: ${parentsPerc}%
     Spouse: ${spousePerc}%
     Children: ${childrenPerc}%
-    `,
-  );
+    `;
+
+  if (values.items.includes("childrenPresent")) {
+    bodyText += `Number of Children: ${values.childrenNumber}`;
+  }
+
+  let telegramBotUrl = `https://api.telegram.org/bot${import.meta.env.VITE_TELEGRAM_BOT_TOKEN}/sendMessage`;
+
+  let bodyContent = new FormData();
+  bodyContent.append("chat_id", "@assetdistcalc");
+  bodyContent.append("text", bodyText);
 
   const { error } = useFetch(telegramBotUrl).post(bodyContent);
   if (error.value) {
@@ -153,20 +157,44 @@ const onSubmit = handleSubmit((values) => {
             :unchecked-value="false"
             name="items"
           >
-            <FormItem class="flex flex-row items-start space-x-3 space-y-0">
-              <FormControl>
-                <Checkbox
-                  :checked="value.includes(item.id)"
-                  @update:checked="handleChange"
-                />
-              </FormControl>
-              <FormLabel class="font-normal">
-                {{ item.label }}
-              </FormLabel>
-              <Users v-if="item.id === 'parentsPresent'" class="h-4 w-4" />
-              <HandHeart v-if="item.id === 'spousePresent'" class="h-4 w-4" />
-              <Baby v-if="item.id === 'childrenPresent'" class="h-4 w-4" />
-            </FormItem>
+            <div class="space-y-3">
+              <FormItem class="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    :checked="value.includes(item.id)"
+                    @update:checked="handleChange"
+                  />
+                </FormControl>
+                <FormLabel class="font-normal">
+                  {{ item.label }}
+                </FormLabel>
+                <Users v-if="item.id === 'parentsPresent'" class="h-4 w-4" />
+                <HandHeart v-if="item.id === 'spousePresent'" class="h-4 w-4" />
+                <Baby v-if="item.id === 'childrenPresent'" class="h-4 w-4" />
+              </FormItem>
+              <FormField
+                v-if="
+                  item.id === 'childrenPresent' &&
+                  value.includes('childrenPresent')
+                "
+                v-slot="{ componentField }"
+                name="childrenNumber"
+              >
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="10"
+                      placeholder="How many?"
+                      v-bind="componentField"
+                      class="w-32"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              </FormField>
+            </div>
           </FormField>
         </div>
         <FormMessage />
@@ -189,6 +217,7 @@ const onSubmit = handleSubmit((values) => {
         <FormMessage />
       </FormItem>
     </FormField>
+
     <Button type="submit">Submit</Button>
   </form>
 </template>
