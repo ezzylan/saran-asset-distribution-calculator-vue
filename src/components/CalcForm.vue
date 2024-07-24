@@ -111,7 +111,7 @@ const onSubmit = handleSubmit((values) => {
   let telegramBotUrl = `https://api.telegram.org/bot${import.meta.env.VITE_TELEGRAM_BOT_TOKEN}/sendMessage`;
 
   let bodyContent = new FormData();
-  bodyContent.append("chat_id", "@assetdistcalc");
+  bodyContent.append("chat_id", "@tsassetdistcalc");
   bodyContent.append("text", bodyText);
 
   const { error } = useFetch(telegramBotUrl).post(bodyContent);
