@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { startCase } from "lodash-es";
+import { capitalCase } from "change-case";
 import { Baby, HandHeart, Users } from "lucide-vue-next";
 import isMobilePhone from "validator/lib/isMobilePhone";
 import { useForm } from "vee-validate";
@@ -37,29 +37,20 @@ function calculatePercentage(items: string[]) {
   let spousePerc = 0;
   let childrenPerc = 0;
 
-  if (items.includes("parentsPresent")) {
-    parentsPerc =
-      !items.includes("spousePresent") && !items.includes("childrenPresent")
-        ? 100
-        : 50;
-
-    if (items.includes("spousePresent")) {
-      spousePerc = items.includes("childrenPresent") ? 25 : 50;
-      childrenPerc = items.includes("childrenPresent") ? 25 : 0;
-    } else {
-      spousePerc = 0;
-      childrenPerc = items.includes("childrenPresent") ? 50 : 0;
-    }
+  if (items.length === 1) {
+    parentsPerc = items.includes("parentsPresent") ? 100 : 0;
+    spousePerc = items.includes("spousePresent") ? 100 : 0;
+    childrenPerc = items.includes("childrenPresent") ? 100 : 0;
   } else {
-    parentsPerc = 0;
-
-    if (items.includes("spousePresent")) {
-      spousePerc = items.includes("childrenPresent") ? 50 : 100;
-      childrenPerc = items.includes("childrenPresent") ? 50 : 0;
+    if (items.length === 3) {
+      parentsPerc = 25;
+      spousePerc = 25;
     } else {
-      spousePerc = 0;
-      childrenPerc = items.includes("childrenPresent") ? 100 : 0;
+      parentsPerc = items.includes("parentsPresent") ? 50 : 0;
+      spousePerc = items.includes("spousePresent") ? 50 : 0;
     }
+
+    childrenPerc = !items.includes("childrenPresent") ? 0 : 50;
   }
 
   return { parentsPerc, spousePerc, childrenPerc };
@@ -109,7 +100,7 @@ const onSubmit = handleSubmit((values) => {
 
   let bodyText = `
     New client!
-    Name: ${startCase(values.name)}
+    Name: ${capitalCase(values.name)}
     Email: ${values.email}
     Mobile Number: +60${values.mobileNumber}
     Parents: ${parentsPerc}%
@@ -121,7 +112,7 @@ const onSubmit = handleSubmit((values) => {
     bodyText += `Number of Children: ${values.childrenNumber}\n\t`;
   }
 
-  bodyText += `Referral: ${values.referral === "Person" ? startCase(values.referralPerson) : values.referral}`;
+  bodyText += `Referral: ${values.referral === "Person" ? capitalCase(values.referralPerson) : values.referral}`;
 
   let bodyContent = new FormData();
   bodyContent.append("chat_id", "@tsassetdistcalc");
