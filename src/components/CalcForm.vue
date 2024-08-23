@@ -112,7 +112,7 @@ const onSubmit = handleSubmit((values) => {
     bodyText += `Number of Children: ${values.childrenNumber}\n\t`;
   }
 
-  bodyText += `Referral: ${values.referral === "Person" ? capitalCase(values.referralPerson) : values.referral}`;
+  bodyText += `Referral: ${values.referral === "Person" && values.referralPerson ? capitalCase(values.referralPerson) : values.referral}`;
 
   let bodyContent = new FormData();
   bodyContent.append("chat_id", "@tsassetdistcalc");
